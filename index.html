@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Switch bioquímico · Bifurcaciones 1D</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: #EDF1F4;
+    color: #1B2430;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 22px 16px 48px;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #566173;
+    letter-spacing: 0.02em;
+    margin: 0 0 4px;
+  }
+  h1 {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 27px;
+    line-height: 1.15;
+    margin: 0 0 10px;
+    color: #14202B;
+  }
+  .eq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    background: #fff;
+    border: 1px solid #D4DBE2;
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: inline-block;
+    color: #2F3B4A;
+  }
+  .intro {
+    font-size: 13.5px;
+    color: #4A5568;
+    line-height: 1.55;
+    margin: 12px 0 0;
+    max-width: 60ch;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid #D4DBE2;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .cardTitle {
+    font-family: 'Source Serif 4', serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: #14202B;
+  }
+  .cardSub {
+    font-size: 12.5px;
+    color: #6B7686;
+    margin: 0 0 10px;
+    line-height: 1.5;
+  }
+  .row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+  .row label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    width: 74px;
+    flex-shrink: 0;
+    color: #2F3B4A;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: #C98A2C;
+  }
+  .readout {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    width: 58px;
+    text-align: right;
+    color: #14202B;
+    flex-shrink: 0;
+  }
+  .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: #F5F1E8;
+    border: 1px solid #E7DCC2;
+    border-radius: 8px;
+    padding: 9px 11px;
+    margin-top: 10px;
+    color: #5A4A22;
+    line-height: 1.5;
+  }
+  .hint {
+    font-size: 12.5px;
+    color: #6B7686;
+    line-height: 1.5;
+    margin: 8px 0 0;
+  }
+  svg { width: 100%; height: auto; display: block; }
+  .btnRow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  button.action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: #14202B;
+    color: #F2F5F7;
+    border: none;
+    border-radius: 7px;
+    padding: 9px 13px;
+    cursor: pointer;
+  }
+  button.action.secondary {
+    background: #fff;
+    color: #14202B;
+    border: 1px solid #D4DBE2;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #4A5568;
+  }
+  .legend span.sw { display:inline-block; width:12px; height:3px; margin-right:5px; vertical-align:middle; }
+  footer {
+    margin-top: 22px;
+    font-size: 11.5px;
+    color: #8994A3;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Dinámica no lineal · Bifurcaciones 1D · Ejercicio 6</p>
+  <h1>Switch bioquímico</h1>
+  <span class="eq">dx/dτ = s − rx + x²/(1+x²)</span>
+  <p class="intro">Los tres gráficos están sincronizados: un mismo (r,s) los alimenta a todos. Movés s (a mano o con el barrido automático) y mirás en simultáneo dónde está el punto en el plano de parámetros, cómo se tocan la recta y la curva en el método gráfico, y qué traza deja x* — así se ve que la histéresis es, literalmente, entrar y salir de la región biestable por lugares distintos.</p>
+
+  <div class="card">
+    <p class="cardTitle">1 · Diagrama de bifurcación en el plano (r, s)</p>
+    <p class="cardSub">La línea vertical marca el r actual; el punto negro es (r, s). Los puntos de color son los valores de s donde el punto cruza la curva cúspide, a ese r.</p>
+    <svg id="cuspSvg" viewBox="0 0 340 230"></svg>
+    <div class="row">
+      <label>r</label>
+      <input id="rSlider" type="range" min="0.05" max="0.8" step="0.002" />
+      <span class="readout" id="rReadout"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="cardTitle">2 · Método gráfico</p>
+    <p class="cardSub">Puntos fijos = intersecciones entre la sigmoidea x²/(1+x²) (fija) y la recta rx−s (se mueve con r y s). La escala se ajusta sola para que siempre entren todas las raíces.</p>
+    <svg id="graphSvg" viewBox="0 0 340 210"></svg>
+    <div class="status" id="graphStatus"></div>
+  </div>
+
+  <div class="card">
+    <p class="cardTitle">3 · Histéresis: x* en función de s</p>
+    <p class="cardSub">Las líneas punteadas verticales marcan los dos valores de s donde desaparece una rama estable (silla-nodo) — son los mismos puntos que en el gráfico 1.</p>
+    <svg id="hystSvg" viewBox="0 0 340 230"></svg>
+    <div class="row">
+      <label>s</label>
+      <input id="sSlider" type="range" min="0" max="0.2" step="0.0015" />
+      <span class="readout" id="sReadout"></span>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="background:#C98A2C"></span>s subiendo</span>
+      <span><span class="sw" style="background:#2F6F6B"></span>s bajando</span>
+    </div>
+    <div class="btnRow">
+      <button class="action" id="sweepBtn">Barrido automático</button>
+      <button class="action secondary" id="resetBtn">Reiniciar (r = 0.55)</button>
+    </div>
+    <p class="hint">Arrastrá la corredora de s hacia arriba y después hacia abajo, o usá el barrido automático, y compará en qué valor de s salta hacia arriba contra en qué valor (menor) vuelve a bajar.</p>
+  </div>
+
+  <footer>Cátedra Mindlin · Dinámica no lineal · switch_bioquimico_interactivo.html</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- matemática del modelo ---------------- */
+  const g = (x) => (x * x) / (1 + x * x);
+  const f = (x, r, s) => s - r * x + g(x);
+  const fPrime = (x, r) => -r + (2 * x) / Math.pow(1 + x * x, 2);
+
+  function findFixedPoints(r, s, xMaxScan, N) {
+    xMaxScan = xMaxScan || 60;
+    N = N || 3000;
+    const roots = [];
+    let prevX = 0;
+    let prevF = f(0, r, s);
+    for (let i = 1; i <= N; i++) {
+      const x = (i / N) * xMaxScan;
+      const val = f(x, r, s);
+      if ((prevF > 0) !== (val > 0)) {
+        let lo = prevX, hi = x, flo = prevF;
+        for (let k = 0; k < 45; k++) {
+          const mid = (lo + hi) / 2;
+          const fm = f(mid, r, s);
+          if ((fm > 0) === (flo > 0)) { lo = mid; flo = fm; } else { hi = mid; }
+        }
+        roots.push((lo + hi) / 2);
+      }
+      prevX = x;
+      prevF = val;
+    }
+    return roots.map((x) => ({ x: x, stable: fPrime(x, r) < 0 }));
+  }
+
+  function cuspCurve(n) {
+    n = n || 220;
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const x = i / n;
+      const d = Math.pow(1 + x * x, 2);
+      pts.push({ x: x, r: (2 * x) / d, s: (x * x * (1 - x * x)) / d });
+    }
+    return pts;
+  }
+  const R_C = (3 * Math.sqrt(3)) / 8; // ≈0.6495
+
+  // valores de s (a r fijo) donde cambia la cantidad de puntos fijos: las bifurcaciones silla-nodo
+  function findJumpPoints(r, sMax) {
+    const N = 320;
+    const transitions = [];
+    let prevCount = findFixedPoints(r, 0, 60, 900).length;
+    let prevS = 0;
+    for (let i = 1; i <= N; i++) {
+      const s = (i / N) * sMax;
+      const c = findFixedPoints(r, s, 60, 900).length;
+      if (c !== prevCount) {
+        let lo = prevS, hi = s;
+        for (let k = 0; k < 34; k++) {
+          const mid = (lo + hi) / 2;
+          const cm = findFixedPoints(r, mid, 60, 900).length;
+          if (cm === prevCount) { lo = mid; } else { hi = mid; }
+        }
+        transitions.push((lo + hi) / 2);
+        prevCount = c;
+      }
+      prevS = s;
+    }
+    return transitions; // típicamente [] o [s_baja, s_sube]
+  }
+
+  function makeLinear(domain, range) {
+    const d0 = domain[0], d1 = domain[1], r0 = range[0], r1 = range[1];
+    return {
+      scale: (v) => r0 + ((v - d0) / (d1 - d0)) * (r1 - r0),
+      invert: (v) => d0 + ((v - r0) / (r1 - r0)) * (d1 - d0),
+    };
+  }
+
+  /* ---------------- estado ---------------- */
+  const R_DEFAULT = 0.55, R_MIN = 0.05, R_MAX = 0.8, S_MIN = 0, S_MAX = 0.2;
+
+  const state = { r: R_DEFAULT, s: 0, x: 0, trace: [], running: false, dir: 1, timer: null, jumps: [] };
+
+  function lowestStable(r, s) {
+    const fps = findFixedPoints(r, s).filter((p) => p.stable);
+    return fps.length ? Math.min.apply(null, fps.map((p) => p.x)) : 0;
+  }
+
+  function resetState(r) {
+    if (state.timer) { clearInterval(state.timer); state.timer = null; }
+    state.running = false;
+    document.getElementById("sweepBtn").textContent = "Barrido automático";
+    state.r = r;
+    state.s = 0;
+    state.x = lowestStable(r, 0);
+    state.trace = [{ s: 0, x: state.x, dir: 1 }];
+    state.jumps = findJumpPoints(r, S_MAX);
+    renderAll();
+  }
+
+  function stepTo(newS, dir) {
+    const fps = findFixedPoints(state.r, newS).filter((p) => p.stable);
+    if (!fps.length) return;
+    let best = fps[0], bestD = Math.abs(fps[0].x - state.x);
+    for (const p of fps) {
+      const d = Math.abs(p.x - state.x);
+      if (d < bestD) { bestD = d; best = p; }
+    }
+    state.s = newS;
+    state.x = best.x;
+    state.trace.push({ s: newS, x: best.x, dir: dir });
+    renderAll();
+  }
+
+  /* ---------------- render ---------------- */
+  function renderAll() {
+    document.getElementById("rReadout").textContent = state.r.toFixed(3);
+    document.getElementById("sReadout").textContent = state.s.toFixed(3);
+    document.getElementById("rSlider").value = state.r;
+    document.getElementById("sSlider").value = state.s;
+    renderCusp();
+    renderGraph();
+    renderHyst();
+  }
+
+  function renderCusp() {
+    const W = 340, H = 230;
+    const margin = { left: 42, right: 14, top: 14, bottom: 32 };
+    const plotW = W - margin.left - margin.right, plotH = H - margin.top - margin.bottom;
+    const rScale = makeLinear([R_MIN, R_MAX], [margin.left, margin.left + plotW]);
+    const sScale = makeLinear([S_MIN, S_MAX], [margin.top + plotH, margin.top]);
+
+    const curve = cuspCurve();
+    const pathCurve = "M " + curve.map((p) => rScale.scale(p.r) + "," + sScale.scale(p.s)).join(" L ");
+    const pathBistable = pathCurve +
+      " L " + rScale.scale(0.5) + "," + sScale.scale(0) +
+      " L " + rScale.scale(0) + "," + sScale.scale(0) + " Z";
+
+    const cuspX = rScale.scale(R_C), cuspY = sScale.scale(0.125);
+    const rx = rScale.scale(state.r);
+
+    let grid = "";
+    [0, 0.2, 0.4, 0.6, 0.8].forEach((v) => {
+      if (v >= R_MIN && v <= R_MAX) grid += '<line x1="' + rScale.scale(v) + '" x2="' + rScale.scale(v) + '" y1="' + margin.top + '" y2="' + (margin.top + plotH) + '" stroke="#E4E9ED"/>';
+    });
+    [0, 0.05, 0.1, 0.15, 0.2].forEach((v) => {
+      grid += '<line x1="' + margin.left + '" x2="' + (margin.left + plotW) + '" y1="' + sScale.scale(v) + '" y2="' + sScale.scale(v) + '" stroke="#E4E9ED"/>';
+    });
+
+    let rTicks = "";
+    [0, 0.2, 0.4, 0.6, 0.8].forEach((v) => {
+      if (v >= R_MIN && v <= R_MAX) rTicks += '<text x="' + rScale.scale(v) + '" y="' + (margin.top + plotH + 13) + '" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="middle" fill="#566173">' + v + "</text>";
+    });
+    let sTicks = "";
+    [0, 0.1, 0.2].forEach((v) => {
+      sTicks += '<text x="' + (margin.left - 6) + '" y="' + (sScale.scale(v) + 3) + '" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="end" fill="#566173">' + v + "</text>";
+    });
+
+    let jumpMarkup = "";
+    state.jumps.forEach((sv, i) => {
+      const color = i === 0 ? "#2F6F6B" : "#C98A2C";
+      jumpMarkup += '<circle cx="' + rx + '" cy="' + sScale.scale(sv) + '" r="3.4" fill="' + color + '" stroke="#fff" stroke-width="1"/>';
+    });
+
+    const svg =
+      grid +
+      '<path d="' + pathBistable + '" fill="#C98A2C" opacity="0.16" stroke="none"/>' +
+      '<path d="' + pathCurve + '" fill="none" stroke="#14202B" stroke-width="1.6"/>' +
+      '<line x1="' + margin.left + '" x2="' + (margin.left + plotW) + '" y1="' + (margin.top + plotH) + '" y2="' + (margin.top + plotH) + '" stroke="#1B2430"/>' +
+      '<line x1="' + margin.left + '" x2="' + margin.left + '" y1="' + margin.top + '" y2="' + (margin.top + plotH) + '" stroke="#1B2430"/>' +
+      rTicks + sTicks +
+      '<text x="' + (margin.left + plotW) + '" y="' + (margin.top + plotH + 24) + '" font-size="10.5" font-family="JetBrains Mono, monospace" text-anchor="end" fill="#14202B">r &#8594;</text>' +
+      '<text x="' + (margin.left - 34) + '" y="' + (margin.top - 4) + '" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#14202B">s</text>' +
+      '<text x="' + rScale.scale(0.14) + '" y="' + sScale.scale(0.015) + '" font-size="10" font-family="JetBrains Mono, monospace" fill="#7A5A1E">biestable</text>' +
+      '<text x="' + rScale.scale(R_MAX - 0.02) + '" y="' + sScale.scale(S_MAX - 0.02) + '" font-size="10" font-family="JetBrains Mono, monospace" text-anchor="end" fill="#566173">monoestable</text>' +
+      '<circle cx="' + cuspX + '" cy="' + cuspY + '" r="2.2" fill="#14202B"/>' +
+      '<text x="' + (cuspX + 5) + '" y="' + (cuspY - 4) + '" font-size="9" font-family="JetBrains Mono, monospace" fill="#14202B">cúspide</text>' +
+      '<line x1="' + rx + '" x2="' + rx + '" y1="' + margin.top + '" y2="' + (margin.top + plotH) + '" stroke="#14202B" stroke-dasharray="3,3" opacity="0.55"/>' +
+      jumpMarkup +
+      '<circle cx="' + rx + '" cy="' + sScale.scale(state.s) + '" r="6" fill="#14202B" stroke="#fff" stroke-width="2"/>';
+
+    document.getElementById("cuspSvg").innerHTML = svg;
+  }
+
+  function renderGraph() {
+    const W = 340, H = 210;
+    const margin = { left: 36, right: 14, top: 16, bottom: 44 };
+    const plotW = W - margin.left - margin.right, plotH = H - margin.top - margin.bottom;
+
+    const fps = findFixedPoints(state.r, state.s);
+    const maxRoot = fps.length ? Math.max.apply(null, fps.map((p) => p.x)) : 1;
+    const xMax = Math.min(10, Math.max(3, maxRoot * 1.45));
+
+    const N = 140;
+    const gPts = [], lPts = [];
+    let yMin = 0, yMax = 0.1;
+    for (let i = 0; i <= N; i++) {
+      const x = (i / N) * xMax;
+      const gv = g(x), lv = state.r * x - state.s;
+      gPts.push([x, gv]); lPts.push([x, lv]);
+      yMin = Math.min(yMin, gv, lv);
+      yMax = Math.max(yMax, gv, lv);
+    }
+    const pad = (yMax - yMin) * 0.1;
+    yMin -= pad; yMax += pad;
+
+    const xScale = makeLinear([0, xMax], [margin.left, margin.left + plotW]);
+    const yScale = makeLinear([yMin, yMax], [margin.top + plotH, margin.top]);
+
+    const pathG = "M " + gPts.map((p) => xScale.scale(p[0]) + "," + yScale.scale(p[1])).join(" L ");
+    const pathL = "M " + lPts.map((p) => xScale.scale(p[0]) + "," + yScale.scale(p[1])).join(" L ");
+
+    const roots = fps.map((p) => p.x).sort((a, b) => a - b);
+    const breakpoints = [0].concat(roots, [xMax]);
+    const arrowY = margin.top + plotH + 20;
+    let arrows = "";
+    for (let i = 0; i < breakpoints.length - 1; i++) {
+      const a = breakpoints[i], b = breakpoints[i + 1];
+      if (b - a < 1e-3) continue;
+      const mid = (a + b) / 2;
+      const dir = f(mid, state.r, state.s) > 0 ? 1 : -1;
+      const cx = xScale.scale(mid);
+      const pts = dir > 0
+        ? (cx - 5) + "," + (arrowY - 4) + " " + (cx + 5) + "," + arrowY + " " + (cx - 5) + "," + (arrowY + 4)
+        : (cx + 5) + "," + (arrowY - 4) + " " + (cx - 5) + "," + arrowY + " " + (cx + 5) + "," + (arrowY + 4);
+      arrows += '<polygon points="' + pts + '" fill="#14202B"/>';
+    }
+
+    let fpMarkers = "", fpAxis = "";
+    fps.forEach((p) => {
+      const fill = p.stable ? "#14202B" : "#fff";
+      fpMarkers += '<circle cx="' + xScale.scale(p.x) + '" cy="' + yScale.scale(g(p.x)) + '" r="5" fill="' + fill + '" stroke="#14202B" stroke-width="2"/>';
+      fpAxis += '<circle cx="' + xScale.scale(p.x) + '" cy="' + arrowY + '" r="4" fill="' + fill + '" stroke="#14202B" stroke-width="1.6"/>';
+    });
+
+    let xTicks = "";
+    [0, xMax / 2, xMax].forEach((v) => {
+      xTicks += '<text x="' + xScale.scale(v) + '" y="' + (margin.top + plotH + 12) + '" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="middle" fill="#566173">' + v.toFixed(1) + "</text>";
+    });
+
+    const svg =
+      '<line x1="' + margin.left + '" x2="' + (margin.left + plotW) + '" y1="' + yScale.scale(0) + '" y2="' + yScale.scale(0) + '" stroke="#D4DBE2"/>' +
+      '<line x1="' + margin.left + '" x2="' + margin.left + '" y1="' + margin.top + '" y2="' + (margin.top + plotH) + '" stroke="#1B2430"/>' +
+      '<line x1="' + margin.left + '" x2="' + (margin.left + plotW) + '" y1="' + (margin.top + plotH) + '" y2="' + (margin.top + plotH) + '" stroke="#1B2430"/>' +
+      '<path d="' + pathG + '" fill="none" stroke="#2F6F6B" stroke-width="2"/>' +
+      '<path d="' + pathL + '" fill="none" stroke="#C98A2C" stroke-width="2"/>' +
+      '<text x="' + (margin.left + plotW - 2) + '" y="' + (yScale.scale(gPts[gPts.length - 1][1]) - 6) + '" font-size="10" text-anchor="end" font-family="JetBrains Mono, monospace" fill="#2F6F6B">x&#178;/(1+x&#178;)</text>' +
+      '<text x="' + (margin.left + plotW - 2) + '" y="' + (yScale.scale(lPts[lPts.length - 1][1]) - 6) + '" font-size="10" text-anchor="end" font-family="JetBrains Mono, monospace" fill="#C98A2C">rx &#8722; s</text>' +
+      fpMarkers +
+      '<line x1="' + margin.left + '" x2="' + (margin.left + plotW) + '" y1="' + arrowY + '" y2="' + arrowY + '" stroke="#D4DBE2"/>' +
+      fpAxis + arrows + xTicks +
+      '<text x="' + (margin.left + plotW) + '" y="' + (H - 2) + '" font-size="10" font-family="JetBrains Mono, monospace" text-anchor="end" fill="#14202B">x &#8594;</text>';
+
+    document.getElementById("graphSvg").innerHTML = svg;
+
+    const nStable = fps.filter((p) => p.stable).length;
+    const nUnstable = fps.length - nStable;
+    document.getElementById("graphStatus").textContent =
+      fps.length + " punto" + (fps.length !== 1 ? "s" : "") + " fijo" + (fps.length !== 1 ? "s" : "") +
+      (fps.length ? " (" + nStable + " estable" + (nStable !== 1 ? "s" : "") + ", " + nUnstable + " inestable" + (nUnstable !== 1 ? "s" : "") + ")" : "") +
+      " · " + (fps.length >= 3 ? "biestable" : "monoestable");
+  }
+
+  function renderHyst() {
+    const W = 340, H = 230;
+    const margin = { left: 38, right: 14, top: 22, bottom: 32 };
+    const plotW = W - margin.left - margin.right, plotH = H - margin.top - margin.bottom;
+    const xScaleS = makeLinear([S_MIN, S_MAX], [margin.left, margin.left + plotW]);
+
+    const allXs = state.trace.map((p) => p.x).concat([state.x]);
+    let yMaxX = Math.max(2.5, Math.max.apply(null, allXs) * 1.25);
+    const yScaleX = makeLinear([0, yMaxX], [margin.top + plotH, margin.top]);
+
+    const segments = [];
+    let cur = [];
+    for (let i = 0; i < state.trace.length; i++) {
+      const p = state.trace[i];
+      if (i > 0 && Math.abs(p.x - state.trace[i - 1].x) > 0.35) {
+        if (cur.length) segments.push(cur);
+        cur = [];
+      }
+      cur.push(p);
+    }
+    if (cur.length) segments.push(cur);
+
+    let segMarkup = "";
+    segments.forEach((seg) => {
+      const color = seg[seg.length - 1].dir > 0 ? "#C98A2C" : "#2F6F6B";
+      segMarkup += '<path d="M ' + seg.map((p) => xScaleS.scale(p.s) + "," + yScaleX.scale(p.x)).join(" L ") + '" fill="none" stroke="' + color + '" stroke-width="2"/>';
+    });
+    let jumpMarkup = "";
+    for (let i = 1; i < segments.length; i++) {
+      const a = segments[i - 1][segments[i - 1].length - 1];
+      const b = segments[i][0];
+      if (Math.abs(a.s - b.s) < 0.01) {
+        const color = b.dir > 0 ? "#C98A2C" : "#2F6F6B";
+        jumpMarkup += '<line x1="' + xScaleS.scale(a.s) + '" x2="' + xScaleS.scale(b.s) + '" y1="' + yScaleX.scale(a.x) + '" y2="' + yScaleX.scale(b.x) + '" stroke="' + color + '" stroke-dasharray="2,3" stroke-width="1.6"/>';
+      }
+    }
+
+    let refLines = "";
+    const validJumps = state.jumps.filter(sv => sv > 0.001);
+    validJumps.forEach((sv, i) => {
+      // i === 0 (menor valor de s): punto de salto al bajar -> "s baja"
+      // i === 1 (mayor valor de s): punto de salto al subir -> "s sube"
+      const color = i === 0 ? "#2F6F6B" : "#C98A2C";
+      const label = i === 0 ? "s baja" : "s sube";
+      const x = xScaleS.scale(sv);
+      refLines += '<line x1="' + x + '" x2="' + x + '" y1="' + margin.top + '" y2="' + (margin.top + plotH) + '" stroke="' + color + '" stroke-dasharray="1,3" opacity="0.55"/>';
+      refLines += '<text x="' + x + '" y="' + (margin.top - 6) + '" font-size="8.5" font-family="JetBrains Mono, monospace" text-anchor="middle" fill="' + color + '">' + label + "</text>";
+    });
+
+    let grid = "";
+    [0, 0.05, 0.1, 0.15, 0.2].forEach((v) => {
+      grid += '<line x1="' + xScaleS.scale(v) + '" x2="' + xScaleS.scale(v) + '" y1="' + margin.top + '" y2="' + (margin.top + plotH) + '" stroke="#EEF1F3"/>';
+    });
+
+    let xTicks = "";
+    [0, 0.05, 0.1, 0.15, 0.2].forEach((v) => {
+      xTicks += '<text x="' + xScaleS.scale(v) + '" y="' + (margin.top + plotH + 13) + '" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="middle" fill="#566173">' + v + "</text>";
+    });
+    const yTickVals = [0, Math.round((yMaxX / 2) * 10) / 10, Math.round(yMaxX * 10) / 10];
+    let yTicks = "";
+    yTickVals.forEach((v) => {
+      yTicks += '<text x="' + (margin.left - 6) + '" y="' + (yScaleX.scale(v) + 3) + '" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="end" fill="#566173">' + v + "</text>";
+    });
+
+    const svg =
+      grid +
+      '<line x1="' + margin.left + '" x2="' + margin.left + '" y1="' + margin.top + '" y2="' + (margin.top + plotH) + '" stroke="#1B2430"/>' +
+      '<line x1="' + margin.left + '" x2="' + (margin.left + plotW) + '" y1="' + (margin.top + plotH) + '" y2="' + (margin.top + plotH) + '" stroke="#1B2430"/>' +
+      refLines + segMarkup + jumpMarkup +
+      '<circle cx="' + xScaleS.scale(state.s) + '" cy="' + yScaleX.scale(state.x) + '" r="5.5" fill="#14202B" stroke="#fff" stroke-width="2"/>' +
+      xTicks + yTicks +
+      '<text x="' + (margin.left + plotW) + '" y="' + (margin.top + plotH + 24) + '" font-size="10.5" font-family="JetBrains Mono, monospace" text-anchor="end" fill="#14202B">s &#8594;</text>' +
+      '<text x="' + (margin.left - 30) + '" y="' + (margin.top - 8) + '" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#14202B">x*</text>';
+
+    document.getElementById("hystSvg").innerHTML = svg;
+  }
+
+  /* ---------------- barrido automático ---------------- */
+  function toggleSweep() {
+    const btn = document.getElementById("sweepBtn");
+    if (state.running) {
+      state.running = false;
+      if (state.timer) { clearInterval(state.timer); state.timer = null; }
+      btn.textContent = "Barrido automático";
+      return;
+    }
+    state.running = true;
+    state.dir = 1;
+    btn.textContent = "Pausar barrido";
+    state.timer = setInterval(function () {
+      let next = state.s + state.dir * 0.0018;
+      if (next >= S_MAX) { next = S_MAX; state.dir = -1; }
+      if (next <= 0 && state.dir === -1) {
+        stepTo(0, -1);
+        state.running = false;
+        if (state.timer) { clearInterval(state.timer); state.timer = null; }
+        btn.textContent = "Barrido automático";
+        return;
+      }
+      stepTo(next, state.dir);
+    }, 16);
+  }
+
+  /* ---------------- eventos ---------------- */
+  document.getElementById("rSlider").addEventListener("input", function (e) {
+    resetState(parseFloat(e.target.value));
+  });
+  document.getElementById("sSlider").addEventListener("input", function (e) {
+    const ns = parseFloat(e.target.value);
+    const dir = ns >= state.s ? 1 : -1;
+    stepTo(ns, dir);
+  });
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    resetState(R_DEFAULT);
+  });
+  document.getElementById("sweepBtn").addEventListener("click", toggleSweep);
+
+  /* ---------------- init ---------------- */
+  document.getElementById("rSlider").min = R_MIN;
+  document.getElementById("rSlider").max = R_MAX;
+  document.getElementById("sSlider").min = S_MIN;
+  document.getElementById("sSlider").max = S_MAX;
+  resetState(R_DEFAULT);
+})();
+</script>
+</body>
+</html>
